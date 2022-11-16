@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
     res.json({ message: "Welcome to bezkoder application." });
 })
-require('./routes/users.routes')(app);
+require('./routes/users.routes.js')(app);
 
 db.sequelize.sync();
 

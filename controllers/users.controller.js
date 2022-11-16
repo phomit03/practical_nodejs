@@ -2,13 +2,6 @@ const db = require("../models");
 const User = db.users;
 const mysql = require('mysql');
 
-let connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
-});
-
 
 // home
 exports.views = (req, res) => {
@@ -17,10 +10,14 @@ exports.views = (req, res) => {
 
 //get all user
 exports.getAllUser = (req, res) => {
+    const UserName = req.query.UserName;
+    var checkUserName = UserName ? { UserName: { [Op.like]: `%${UserName}%` } } : null;
+
     try {
-        User.findAll()
+        User.findAll({ where: checkUserName })  //check username khong bi trung lap
             .then(data => {
-                res.send(data);
+                console.log(data);
+                res.render('list', {users: data || []});
             })
             .catch(err => {
                 res.status(500).send({
@@ -35,21 +32,28 @@ exports.getAllUser = (req, res) => {
 
 // form
 exports.formUser = (req, res) => {
-    res.render('add-user');
+    res.render('add-user', {error: ''});
 }
 
 // Add new user
 exports.addUser = (req, res) => {
-    const { FirstName, LastName, Mobile, UserName, Password } = req.body;
+    if (!req.body.Mobile) {
+        res.render('create', {error: "Error!"})
+        return;
+    }
+    const user = {
+        FirstName: req.body.FirstName,
+        LastName: req.body.LastName,
+        Mobile: req.body.Mobile,
+        UserName: req.body.UserName,
+        Password: req.body.Password,
 
-    // User the connection
-    connection.query('INSERT INTO user SET FirstName = ?, LastName = ?, Mobile = ?, UserName = ?, Password = ?',
-        [FirstName, LastName, Mobile, UserName, Password], (err, rows) => {
-        if (!err) {
-            res.render('add-user', { alert: 'User added successfully.' });
-        } else {
-            console.log(err);
-        }
-        console.log('The data from user table: \n', rows);
-    });
+    };
+    User.create(user)
+        .then(data => {
+            res.render('index')
+        })
+        .catch(err => {
+            res.render('create', {error: err.message || "Error"})
+        });
 }

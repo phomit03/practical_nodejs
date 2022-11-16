@@ -12,5 +12,5 @@ module.exports = app => {
     router.get("/addUser", users.formUser);
     router.post("/addUser", users.addUser);
 
-    app.use('/api/users', router);
+    //app.use('/api/users', router);
 }
